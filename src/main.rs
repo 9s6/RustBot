@@ -11,6 +11,8 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::io;
 
+extern crate reqwest;
+
 use serenity::framework::standard::{
     Args,
     StandardFramework,
@@ -29,7 +31,7 @@ extern crate serde_json;
 use serde_json::Value as JsonValue;
 
 #[group]
-#[commands(test, randint, help, info)]
+#[commands(test, randint, help, info, cat)]
 struct General;
 
 struct Handler;
@@ -37,9 +39,16 @@ struct Handler;
 #[async_trait]
 impl EventHandler for Handler {
     async fn ready(&self, _ctx: Context, info: Ready) {
+        print!("\x1B[2J\x1B[1;1H");
         println!("Connected with {}", info.user.name);
+        let mut file = File::open("config.json").expect("Error opening config file!");
 
-        _ctx.set_activity(Activity::playing(format!("420 420 420 420 420 420 420 420").as_str(),)).await;
+        let mut c = String::new();
+        file.read_to_string(&mut c).expect("Error reading file!");
+
+        let res: JsonValue = serde_json::from_str(&c).expect("Error getting Json values");
+
+        _ctx.set_activity(Activity::playing(res["presence"].to_string().replace('"', "").as_str(),)).await;
     }
 }
 
@@ -50,8 +59,6 @@ impl EventHandler for Handler {
 
 #[tokio::main]
 async fn main() {
-
-
     let mut file = File::open("config.json").expect("Error opening config file!");
 
     let mut c = String::new();
@@ -134,3 +141,18 @@ async fn info(ctx: &Context, msg: &Message) -> CommandResult {
 }
 
 
+#[command]
+async fn cat(ctx: &Context, msg: &Message) -> CommandResult {
+    
+    let body = reqwest::get("http://aws.random.cat/meow").await?.text().await?;
+
+    let res: JsonValue = serde_json::from_str(&body.as_str()).expect("Error getting Json values");
+
+
+
+    msg.channel_id.say(&ctx.http, &res["file"].to_string().replace('"', "")).await?;
+
+
+
+    Ok(())
+}
