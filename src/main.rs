@@ -29,7 +29,7 @@ extern crate serde_json;
 use serde_json::Value as JsonValue;
 
 #[group]
-#[commands(test, randint, help)]
+#[commands(test, randint, help, info)]
 struct General;
 
 struct Handler;
@@ -50,10 +50,6 @@ impl EventHandler for Handler {
 
 #[tokio::main]
 async fn main() {
-    let framework = StandardFramework::new()
-        .configure(|c| c.prefix("~"))
-        .group(&GENERAL_GROUP);
-
 
 
     let mut file = File::open("config.json").expect("Error opening config file!");
@@ -62,6 +58,13 @@ async fn main() {
     file.read_to_string(&mut c).expect("Error reading file!");
 
     let res: JsonValue = serde_json::from_str(&c).expect("Error getting Json values");
+
+    let prefix = res["prefix"].to_string().replace('"', "");
+
+    let framework = StandardFramework::new()
+        .configure(|c| c.prefix(&prefix))
+        .group(&GENERAL_GROUP);
+
 
     let token = res["token"].to_string().replace('"', "");
 
@@ -103,13 +106,30 @@ async fn help(ctx: &Context, msg: &Message) -> CommandResult {
     embed.footer(|f| {
         f.text(&format!("RustBot by hellsing"))
     });
-    
 
     msg.channel_id.send_message(&ctx.http, |m| m.embed(|e| {
         e.0 = embed.0;
         e
     })).await?;
 
+    Ok(())
+}
+
+#[command]
+async fn info(ctx: &Context, msg: &Message) -> CommandResult {
+    let mut embed = CreateEmbed::default();
+    embed.title("RustBot");
+    embed.description("RustBot made by hellsing");
+    embed.field("github: ", "[9s6](https://github.com/9s6)", true);
+    embed.field("repl.it: ", "[udp](https://repl.it/@udp)", true);
+    embed.footer(|f| {
+        f.text(&format!("RustBot by hellsing"))
+    });
+    msg.channel_id.send_message(&ctx.http, |m| m.embed(|e| {
+        e.0 = embed.0;
+        e
+    })).await?;
+    
     Ok(())
 }
 
