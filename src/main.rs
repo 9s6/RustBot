@@ -4,12 +4,12 @@ use serenity::model::channel::Message;
 use serenity::model::gateway::Ready;
 use serenity::model::gateway::Activity;
 use serenity::builder::CreateEmbed;
-use serenity::model::prelude::*;
-use serenity::model::id::ChannelId;
+// use serenity::model::prelude::*;
+// use serenity::model::id::ChannelId;
 
 use std::fs::File;
 use std::io::prelude::*;
-use std::io;
+// use std::io;
 
 extern crate reqwest;
 
@@ -31,7 +31,7 @@ extern crate serde_json;
 use serde_json::Value as JsonValue;
 
 #[group]
-#[commands(test, randint, help, info, cat, dog, fox, fun, misc, pat)]
+#[commands(test, randint, help, info, cat, dog, fox, fun, misc, pat, hug)]
 struct General;
 
 struct Handler;
@@ -85,7 +85,6 @@ async fn main() {
         println!("An error occurred while running the client: {:?}", why);
     }
 }
-
 
 #[command]
 async fn test(ctx: &Context, msg: &Message) -> CommandResult {
@@ -148,6 +147,7 @@ async fn fun(ctx: &Context, msg: &Message) -> CommandResult {
     embed.title("Fun menu");
     embed.description("All of the fun commands");
     embed.field("pat <user>", "pat a user", false);
+    embed.field("hug <user>", "hugs a user", false);
     embed.footer(|f| {
         f.text(&format!("RustBot by hellsing"))
     });
@@ -229,13 +229,11 @@ async fn fox(ctx: &Context, msg: &Message) -> CommandResult {
 #[command]
 async fn pat(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     
-    let member = msg.mentions.first();
 
     if args.is_empty() {
         msg.channel_id.say(&ctx.http, "Need to mention a user!").await?;
     } else {
         let username = &msg.mentions[0].name;
-        // msg.channel_id.say(&ctx.http, &format!("{} just hugged {}", msg.author.name, username)).await?;
 
         let body = reqwest::get("https://some-random-api.ml/animu/pat").await?.text().await?;
 
@@ -243,6 +241,37 @@ async fn pat(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
 
         let mut embed = CreateEmbed::default();
         embed.title(&format!("{} just patted {}", msg.author.name, username));
+        embed.image(&format!("{}", res["link"].to_string().replace('"', "")));
+        embed.footer(|f| {
+            f.text(&format!("RustBot by hellsing"))
+        });
+
+
+        msg.channel_id.send_message(&ctx.http, |m| m.embed(|e| {
+            e.0 = embed.0;
+            e
+        })).await?;
+    }
+
+    
+    Ok(())
+}
+
+#[command]
+async fn hug(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
+    
+
+    if args.is_empty() {
+        msg.channel_id.say(&ctx.http, "Need to mention a user!").await?;
+    } else {
+        let username = &msg.mentions[0].name;
+
+        let body = reqwest::get("https://some-random-api.ml/animu/hug").await?.text().await?;
+
+        let res: JsonValue = serde_json::from_str(&body.as_str()).expect("Error getting Json values");
+
+        let mut embed = CreateEmbed::default();
+        embed.title(&format!("{} just hugged {}", msg.author.name, username));
         embed.image(&format!("{}", res["link"].to_string().replace('"', "")));
         embed.footer(|f| {
             f.text(&format!("RustBot by hellsing"))
