@@ -31,7 +31,7 @@ extern crate serde_json;
 use serde_json::Value as JsonValue;
 
 #[group]
-#[commands(test, randint, help, info, cat)]
+#[commands(test, randint, help, info, cat, dog, fox, fun, misc, pat)]
 struct General;
 
 struct Handler;
@@ -109,7 +109,65 @@ async fn help(ctx: &Context, msg: &Message) -> CommandResult {
     let mut embed = CreateEmbed::default();
     embed.title("RustBot");
     embed.description("All of the commands of the bot");
+    embed.field("fun", "fun commands", false);
+    embed.field("animas", "animal pictures/gifs", false);
+    embed.field("misc", "misc commands", false);
+    embed.field("info", "Gives info about the bot", false);
+    embed.footer(|f| {
+        f.text(&format!("RustBot by hellsing"))
+    });
+
+    msg.channel_id.send_message(&ctx.http, |m| m.embed(|e| {
+        e.0 = embed.0;
+        e
+    })).await?;
+
+    Ok(())
+}
+
+#[command]
+async fn misc(ctx: &Context, msg: &Message) -> CommandResult {
+    let mut embed = CreateEmbed::default();
+    embed.title("Misc menu");
+    embed.description("All of the misc commands");
     embed.field("randint", "Generates a random number from 1 to 100", false);
+    embed.footer(|f| {
+        f.text(&format!("RustBot by hellsing"))
+    });
+    msg.channel_id.send_message(&ctx.http, |m| m.embed(|e| {
+        e.0 = embed.0;
+        e
+    })).await?;
+
+    Ok(())
+}
+
+#[command]
+async fn fun(ctx: &Context, msg: &Message) -> CommandResult {
+    let mut embed = CreateEmbed::default();
+    embed.title("Fun menu");
+    embed.description("All of the fun commands");
+    embed.field("pat <user>", "pat a user", false);
+    embed.footer(|f| {
+        f.text(&format!("RustBot by hellsing"))
+    });
+    msg.channel_id.send_message(&ctx.http, |m| m.embed(|e| {
+        e.0 = embed.0;
+        e
+    })).await?;
+
+    Ok(())
+}
+
+#[command]
+async fn animals(ctx: &Context, msg: &Message) -> CommandResult {
+    
+    let mut embed = CreateEmbed::default();
+    embed.title("RustBot");
+    embed.description("All of the commands of the bot");
+    embed.field("cat", "Generates a random cat image/gif", false);
+    embed.field("fox", "Generates a random fox image/gif", false);
+    embed.field("dog", "Generates a random dog image/gif", false);
     embed.footer(|f| {
         f.text(&format!("RustBot by hellsing"))
     });
@@ -143,16 +201,60 @@ async fn info(ctx: &Context, msg: &Message) -> CommandResult {
 
 #[command]
 async fn cat(ctx: &Context, msg: &Message) -> CommandResult {
-    
     let body = reqwest::get("http://aws.random.cat/meow").await?.text().await?;
 
     let res: JsonValue = serde_json::from_str(&body.as_str()).expect("Error getting Json values");
-
-
-
     msg.channel_id.say(&ctx.http, &res["file"].to_string().replace('"', "")).await?;
+    Ok(())
+}
+
+#[command]
+async fn dog(ctx: &Context, msg: &Message) -> CommandResult {
+    let body = reqwest::get("https://some-random-api.ml/img/dog").await?.text().await?;
+
+    let res: JsonValue = serde_json::from_str(&body.as_str()).expect("Error getting Json values");
+    msg.channel_id.say(&ctx.http, &res["link"].to_string().replace('"', "")).await?;
+    Ok(())
+}
+
+#[command]
+async fn fox(ctx: &Context, msg: &Message) -> CommandResult {
+    let body = reqwest::get("https://some-random-api.ml/img/fox").await?.text().await?;
+
+    let res: JsonValue = serde_json::from_str(&body.as_str()).expect("Error getting Json values");
+    msg.channel_id.say(&ctx.http, &res["link"].to_string().replace('"', "")).await?;
+    Ok(())
+}
+
+#[command]
+async fn pat(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
+    
+    let member = msg.mentions.first();
+
+    if args.is_empty() {
+        msg.channel_id.say(&ctx.http, "Need to mention a user!").await?;
+    } else {
+        let username = &msg.mentions[0].name;
+        // msg.channel_id.say(&ctx.http, &format!("{} just hugged {}", msg.author.name, username)).await?;
+
+        let body = reqwest::get("https://some-random-api.ml/animu/pat").await?.text().await?;
+
+        let res: JsonValue = serde_json::from_str(&body.as_str()).expect("Error getting Json values");
+
+        let mut embed = CreateEmbed::default();
+        embed.title(&format!("{} just patted {}", msg.author.name, username));
+        embed.image(&format!("{}", res["link"].to_string().replace('"', "")));
+        embed.footer(|f| {
+            f.text(&format!("RustBot by hellsing"))
+        });
 
 
+        msg.channel_id.send_message(&ctx.http, |m| m.embed(|e| {
+            e.0 = embed.0;
+            e
+        })).await?;
+    }
 
+    
     Ok(())
 }

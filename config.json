@@ -1,5 +1,5 @@
 {
     "token": "bot token",
     "prefix": "~",
-    "presence": "this is the presence"
+    "presence": "~help | github.com/9s6/RustBot"
 }
