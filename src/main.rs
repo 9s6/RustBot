@@ -31,7 +31,7 @@ extern crate serde_json;
 use serde_json::Value as JsonValue;
 
 #[group]
-#[commands(test, randint, help, info, cat, dog, fox, fun, misc, pat, hug)]
+#[commands(test, randint, help, info, cat, dog, fox, fun, misc, pat, hug, av)]
 struct General;
 
 struct Handler;
@@ -130,6 +130,7 @@ async fn misc(ctx: &Context, msg: &Message) -> CommandResult {
     embed.title("Misc menu");
     embed.description("All of the misc commands");
     embed.field("randint", "Generates a random number from 1 to 100", false);
+    embed.field("av [user]", "Sends the avatar of the user/author", false);
     embed.footer(|f| {
         f.text(&format!("RustBot by hellsing"))
     });
@@ -284,6 +285,19 @@ async fn hug(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
         })).await?;
     }
 
+    
+    Ok(())
+}
+
+#[command]
+async fn av(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
+    if msg.mentions.first().is_none() {
+        let av = msg.author.face();
+        msg.reply(ctx, av).await;
+    } else {
+        let av = msg.mentions[0].face();
+        msg.reply(ctx, av).await;
+    }
     
     Ok(())
 }
