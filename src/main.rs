@@ -7,6 +7,9 @@ use serenity::builder::CreateEmbed;
 use serenity::model::prelude::*;
 use serenity::model::id::ChannelId;
 
+use std::fs::File;
+use std::io::prelude::*;
+use std::io;
 
 use serenity::framework::standard::{
     Args,
@@ -20,8 +23,10 @@ use serenity::framework::standard::{
 
 use rand::Rng;
 
-use std::{thread, time};
 
+
+extern crate serde_json;
+use serde_json::Value as JsonValue;
 
 #[group]
 #[commands(test, randint, help)]
@@ -49,8 +54,17 @@ async fn main() {
         .configure(|c| c.prefix("~"))
         .group(&GENERAL_GROUP);
 
-    let token = String::from("Bot token");
-    
+
+
+    let mut file = File::open("config.json").expect("Error opening config file!");
+
+    let mut c = String::new();
+    file.read_to_string(&mut c).expect("Error reading file!");
+
+    let res: JsonValue = serde_json::from_str(&c).expect("Error getting Json values");
+
+    let token = res["token"].to_string().replace('"', "");
+
     let mut client = Client::builder(token)
         .event_handler(Handler)
         .framework(framework)
@@ -74,7 +88,7 @@ async fn test(ctx: &Context, msg: &Message) -> CommandResult {
 async fn randint(ctx: &Context, msg: &Message) -> CommandResult {
     let num: i64 = rand::thread_rng().gen_range(0..100);
 
-    msg.channel_id.say(&ctx.http, num).await?;
+    msg.channel_id.say(&ctx.http, format!("Your number is: {}", num)).await?;
     
     Ok(())
 }
@@ -98,3 +112,5 @@ async fn help(ctx: &Context, msg: &Message) -> CommandResult {
 
     Ok(())
 }
+
+
