@@ -4,6 +4,7 @@ use serenity::model::channel::Message;
 use serenity::model::gateway::Ready;
 use serenity::model::gateway::Activity;
 use serenity::builder::CreateEmbed;
+use serenity::builder::*;
 // use serenity::model::prelude::*;
 // use serenity::model::id::ChannelId;
 
@@ -31,7 +32,7 @@ extern crate serde_json;
 use serde_json::Value as JsonValue;
 
 #[group]
-#[commands(test, randint, help, info, cat, dog, fox, fun, misc, pat, hug, av)]
+#[commands(test, randint, help, info, cat, dog, fox, fun, misc, pat, hug, av, whois)]
 struct General;
 
 struct Handler;
@@ -51,10 +52,6 @@ impl EventHandler for Handler {
         _ctx.set_activity(Activity::playing(res["presence"].to_string().replace('"', "").as_str(),)).await;
     }
 }
-
-
-
-
 
 
 #[tokio::main]
@@ -297,6 +294,39 @@ async fn av(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     } else {
         let av = msg.mentions[0].face();
         msg.reply(ctx, av).await;
+    }
+    
+    Ok(())
+}
+
+#[command]
+async fn whois(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
+    
+    if msg.mentions.is_empty() {
+
+        let mut embed = CreateEmbed::default();
+        embed.title(&format!("Whosis for: {}", msg.author.name));
+        embed.field("Id: ", &msg.author.id, false);
+        embed.field("Full username: ", &format!("{}#{}", msg.author.name, msg.author.discriminator), false);
+        embed.field("Created at: ", &msg.author.created_at(), false);
+        embed.image(&msg.author.face());
+
+        msg.channel_id.send_message(&ctx.http, |m| m.embed(|e| {
+            e.0 = embed.0;
+            e
+        })).await?;
+    } else {
+        let mut embed = CreateEmbed::default();
+        embed.title(&format!("Whois for {}", msg.mentions[0].name));
+        embed.field("Id: ", &msg.mentions[0].id, false);
+        embed.field("Full username: ", &format!("{}#{}", msg.mentions[0].name, msg.mentions[0].discriminator), false);
+        embed.field("Created at: ", &msg.mentions[0].created_at(), false);
+        embed.image(&msg.mentions[0].face());
+
+        msg.channel_id.send_message(&ctx.http, |m| m.embed(|e| {
+            e.0 = embed.0;
+            e
+        })).await?;
     }
     
     Ok(())
