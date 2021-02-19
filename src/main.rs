@@ -32,7 +32,7 @@ extern crate serde_json;
 use serde_json::Value as JsonValue;
 
 #[group]
-#[commands(test, randint, help, info, cat, dog, fox, fun, misc, pat, hug, av, whois)]
+#[commands(test, randint, help, info, cat, dog, fox, fun, misc, pat, hug, av, whois, gay)]
 struct General;
 
 struct Handler;
@@ -142,10 +142,11 @@ async fn misc(ctx: &Context, msg: &Message) -> CommandResult {
 #[command]
 async fn fun(ctx: &Context, msg: &Message) -> CommandResult {
     let mut embed = CreateEmbed::default();
-    embed.title("Fun menu");
+    embed.title("Fun menu  |  <> = not required [] = required");
     embed.description("All of the fun commands");
     embed.field("pat <user>", "pat a user", false);
     embed.field("hug <user>", "hugs a user", false);
+    embed.field("gay [user]", "gay image effect", false);
     embed.footer(|f| {
         f.text(&format!("RustBot by hellsing"))
     });
@@ -329,5 +330,17 @@ async fn whois(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
         })).await?;
     }
     
+    Ok(())
+}
+
+#[command]
+async fn gay(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
+    
+    if msg.mentions.is_empty() {
+    
+        msg.reply(ctx, &format!("https://some-random-api.ml/canvas/gay?avatar={}", msg.author.face().replace(".webp", ".png"))).await;
+    } else {
+        msg.reply(ctx, &format!("https://some-random-api.ml/canvas/gay?avatar={}", msg.mentions[0].face().replace(".webp", ".png"))).await;
+    }
     Ok(())
 }
