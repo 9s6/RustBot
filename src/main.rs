@@ -12,6 +12,7 @@ use std::fs::File;
 use std::io::prelude::*;
 // use std::io;
 
+
 extern crate reqwest;
 
 use serenity::framework::standard::{
@@ -32,7 +33,7 @@ extern crate serde_json;
 use serde_json::Value as JsonValue;
 
 #[group]
-#[commands(test, randint, help, info, cat, dog, fox, fun, misc, pat, hug, av, whois, gay)]
+#[commands(test, randint, help, info, cat, dog, fox, fun, misc, pat, hug, av, whois, gay, serverinfo)]
 struct General;
 
 struct Handler;
@@ -128,6 +129,7 @@ async fn misc(ctx: &Context, msg: &Message) -> CommandResult {
     embed.description("All of the misc commands");
     embed.field("randint", "Generates a random number from 1 to 100", false);
     embed.field("av [user]", "Sends the avatar of the user/author", false);
+    embed.field("serverinfo", "Gives you info about the server", false);
     embed.footer(|f| {
         f.text(&format!("RustBot by hellsing"))
     });
@@ -300,6 +302,7 @@ async fn av(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     Ok(())
 }
 
+
 #[command]
 async fn whois(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     
@@ -311,6 +314,7 @@ async fn whois(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
         embed.field("Full username: ", &format!("{}#{}", msg.author.name, msg.author.discriminator), false);
         embed.field("Created at: ", &msg.author.created_at(), false);
         embed.image(&msg.author.face());
+
 
         msg.channel_id.send_message(&ctx.http, |m| m.embed(|e| {
             e.0 = embed.0;
@@ -342,5 +346,25 @@ async fn gay(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     } else {
         msg.reply(ctx, &format!("https://some-random-api.ml/canvas/gay?avatar={}", msg.mentions[0].face().replace(".webp", ".png"))).await;
     }
+    Ok(())
+}
+
+
+#[command]
+async fn serverinfo(ctx: &Context, msg: &Message) -> CommandResult {
+    let mut embed = CreateEmbed::default();
+    let cguild = msg.guild_id.unwrap().to_guild_cached(&ctx.cache).await.unwrap();
+    embed.title(&format!("Info for: {}", cguild.name));
+    embed.field("Id:", cguild.id, false);
+    embed.field("Owner:", &format!("{}#{}", cguild.owner_id.to_user(&ctx).await?.name, cguild.owner_id.to_user(&ctx).await?.discriminator), false);
+    embed.field("Owner id: ", cguild.owner_id, false);
+    embed.field("Created at:", msg.guild_id.unwrap().created_at(), false);
+    embed.thumbnail(cguild.owner_id.to_user(&ctx).await?.face());
+    embed.footer(|f| f.text("server av: ^^  |   owner av: top right"));
+    embed.image(cguild.icon_url().unwrap_or(String::new()));
+    msg.channel_id.send_message(&ctx.http, |m| m.embed(|e| {
+        e.0 = embed.0;
+        e
+    })).await?;
     Ok(())
 }
