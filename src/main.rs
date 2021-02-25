@@ -33,7 +33,7 @@ extern crate serde_json;
 use serde_json::Value as JsonValue;
 
 #[group]
-#[commands(test, randint, help, info, cat, dog, fox, fun, misc, pat, hug, av, whois, gay, serverinfo)]
+#[commands(test, randint, help, info, cat, dog, fox, fun, misc, pat, hug, av, whois, gay, serverinfo, invert)]
 struct General;
 
 struct Handler;
@@ -149,6 +149,7 @@ async fn fun(ctx: &Context, msg: &Message) -> CommandResult {
     embed.field("pat <user>", "pat a user", false);
     embed.field("hug <user>", "hugs a user", false);
     embed.field("gay [user]", "gay image effect", false);
+    embed.filed("inver [user]", "inverts a users/your avatar", false);
     embed.footer(|f| {
         f.text(&format!("RustBot by hellsing"))
     });
@@ -366,5 +367,17 @@ async fn serverinfo(ctx: &Context, msg: &Message) -> CommandResult {
         e.0 = embed.0;
         e
     })).await?;
+    Ok(())
+}
+
+#[command]
+async fn invert(ctx: &Context, msg: &Message) -> CommandResult {
+    
+    if msg.mentions.is_empty() {
+    
+        msg.reply(ctx, &format!("https://some-random-api.ml/canvas/invert?avatar={}", msg.author.face().replace(".webp", ".png"))).await;
+    } else {
+        msg.reply(ctx, &format!("https://some-random-api.ml/canvas/invert?avatar={}", msg.mentions[0].face().replace(".webp", ".png"))).await;
+    }
     Ok(())
 }
