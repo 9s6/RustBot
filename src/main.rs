@@ -33,7 +33,7 @@ extern crate serde_json;
 use serde_json::Value as JsonValue;
 
 #[group]
-#[commands(test, randint, help, info, cat, dog, fox, fun, misc, pat, hug, av, whois, gay, serverinfo, invert)]
+#[commands(test, randint, help, info, cat, dog, fox, fun, misc, pat, hug, av, whois, gay, serverinfo, invert, slap)]
 struct General;
 
 struct Handler;
@@ -149,7 +149,8 @@ async fn fun(ctx: &Context, msg: &Message) -> CommandResult {
     embed.field("pat <user>", "pat a user", false);
     embed.field("hug <user>", "hugs a user", false);
     embed.field("gay [user]", "gay image effect", false);
-    embed.filed("inver [user]", "inverts a users/your avatar", false);
+    embed.field("invert [user]", "inverts a users/your avatar", false);
+    embed.field("slap [user]", "slaps a user" , false);
     embed.footer(|f| {
         f.text(&format!("RustBot by hellsing"))
     });
@@ -210,6 +211,7 @@ async fn cat(ctx: &Context, msg: &Message) -> CommandResult {
     Ok(())
 }
 
+
 #[command]
 async fn dog(ctx: &Context, msg: &Message) -> CommandResult {
     let body = reqwest::get("https://some-random-api.ml/img/dog").await?.text().await?;
@@ -244,6 +246,39 @@ async fn pat(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
         let mut embed = CreateEmbed::default();
         embed.title(&format!("{} just patted {}", msg.author.name, username));
         embed.image(&format!("{}", res["link"].to_string().replace('"', "")));
+        embed.footer(|f| {
+            f.text(&format!("RustBot by hellsing"))
+        });
+
+
+        msg.channel_id.send_message(&ctx.http, |m| m.embed(|e| {
+            e.0 = embed.0;
+            e
+        })).await?;
+    }
+
+    
+    Ok(())
+}
+
+
+
+#[command]
+async fn slap(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
+    
+
+    if args.is_empty() {
+        msg.channel_id.say(&ctx.http, "Need to mention a user!").await?;
+    } else {
+        let username = &msg.mentions[0].name;
+
+        let body = reqwest::get("https://nekos.life/api/v2/img/slap").await?.text().await?;
+
+        let res: JsonValue = serde_json::from_str(&body.as_str()).expect("Error getting Json values");
+
+        let mut embed = CreateEmbed::default();
+        embed.title(&format!("{} just slaped {}", msg.author.name, username));
+        embed.image(&format!("{}", res["url"].to_string().replace('"', "")));
         embed.footer(|f| {
             f.text(&format!("RustBot by hellsing"))
         });
